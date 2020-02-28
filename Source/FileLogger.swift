@@ -18,14 +18,19 @@ open class FileLogger: BaseLoggerTarget {
     
     public var maximumFileSizeInBytes: Int64 = 10_485_760 // 10MB
 
-    fileprivate var _logFile: FileHandle?
+    fileprivate var _logFile: FileHandle? {
+        getFileHandle()
+    }
+
+    fileprivate var fileHandle: FileHandle?
+
+    fileprivate let filePath: String
     
     
     public init(fileURL: URL) {
+        filePath = fileURL.path
         super.init()
-        
-        let filePath = fileURL.path
-        
+
         if( !FileManager.default.fileExists(atPath: filePath) ) {
             FileLogger.createLogFile(atPath: filePath)
         }
@@ -36,9 +41,6 @@ open class FileLogger: BaseLoggerTarget {
                 FileLogger.recreateLogFile(atPath: filePath)
             }
         }
-        
-        _logFile = FileHandle(forWritingAtPath: filePath)!
-        _logFile!.seekToEndOfFile()
     }
     
     public convenience init(fileName: String = defultFileName) {
@@ -47,14 +49,16 @@ open class FileLogger: BaseLoggerTarget {
     }
     
     deinit {
-        _logFile!.closeFile()
+        _logFile?.closeFile()
     }
     
     
     public override func log(formattedMessage: String) {
-        let data = (formattedMessage + "\n").data(using: String.Encoding.utf8)
-        _logFile!.write(data!)
-        _logFile!.synchronizeFile()
+        guard let data = (formattedMessage + "\n").data(using: String.Encoding.utf8), let logFile = _logFile else {
+            return
+        }
+        logFile.write(data)
+        logFile.synchronizeFile()
     }
     
 }
@@ -79,10 +83,10 @@ extension FileLogger {
         #endif
         
         guard let directoryURL = baseURL else {
-            return URL(string: "")!
+            return URL(fileURLWithPath: "")
         }
         
-        return  directoryURL.appendingPathComponent(fileName, isDirectory: false)
+        return directoryURL.appendingPathComponent(fileName, isDirectory: false)
         
     }
     
@@ -99,7 +103,17 @@ extension FileLogger {
         try! fileManager.removeItem(atPath: path)
         fileManager.createFile(atPath: path, contents: nil, attributes: nil)
     }
-    
+
+    fileprivate func getFileHandle() -> FileHandle? {
+        if let _logFile = fileHandle {
+            return _logFile
+        } else {
+            let logFile = FileHandle(forWritingAtPath: filePath)
+            logFile?.seekToEndOfFile()
+            fileHandle = logFile
+            return logFile
+        }
+    }
 }
 
 
@@ -107,12 +121,12 @@ extension FileLogger {
 
 public extension LoggerFactory {
     
-    public func addFile(_ fileName: String = FileLogger.defultFileName)  -> LoggerFactory {
+    func addFile(_ fileName: String = FileLogger.defultFileName)  -> LoggerFactory {
         self.addTarget(FileLogger(fileName: fileName))
         return self
     }
     
-    public func addFile(_ fileURL: URL)  -> LoggerFactory {
+    func addFile(_ fileURL: URL)  -> LoggerFactory {
         self.addTarget(FileLogger(fileURL: fileURL))
         return self
     }

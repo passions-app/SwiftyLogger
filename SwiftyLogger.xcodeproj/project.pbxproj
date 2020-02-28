@@ -406,6 +406,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 908B7B401DC0AFA300148CF8;
@@ -824,6 +825,7 @@
 				PRODUCT_NAME = SwiftyLogger;
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -843,6 +845,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.mtynior.SwiftyLogger-iOS";
 				PRODUCT_NAME = SwiftyLogger;
 				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};
